@@ -14,6 +14,7 @@ interface RegistrationModalProps {
 
 interface RegistrationData {
   fullName: string;
+  gender: 'Male' | 'Female' | '';
   email: string;
   phone: string;
   university: string;
@@ -32,6 +33,7 @@ interface RegistrationData {
 
 const initialForm: RegistrationData = {
   fullName: '',
+  gender: '',
   email: '',
   phone: '',
   university: '',
@@ -78,6 +80,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
           const stone = infinityStones.find((s) => s.id === parsed.stoneId) || infinityStones[0];
           setTicketHtmlContent(emailService.generateTicketHtml({
             fullName: parsed.fullName,
+            gender: parsed.gender,
             email: parsed.email,
             phone: parsed.phone,
             university: parsed.university,
@@ -133,6 +136,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
     if (step === 1) {
       if (!formData.fullName.trim()) {
         setErrorMsg('Please specify your Full Codename / Name.');
+        return false;
+      }
+      if (!formData.gender) {
+        setErrorMsg('Please select your gender (Male / Female).');
         return false;
       }
       if (!formData.email.trim() || !formData.email.includes('@')) {
@@ -208,6 +215,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
       // 1. Record registration to Google Sheet & S.H.I.E.L.D. database
       const syncResult = await googleSheetService.recordRegistration({
         fullName: newPass.fullName,
+        gender: newPass.gender,
         email: newPass.email,
         phone: newPass.phone,
         university: newPass.university,
@@ -238,6 +246,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
       setIsEmailSending(true);
       emailService.sendTicketEmail({
         fullName: newPass.fullName,
+        gender: newPass.gender,
         email: newPass.email,
         phone: newPass.phone,
         university: newPass.university,
@@ -310,7 +319,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
             {submittedPass && (
               <button
                 onClick={handleResetPass}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 bg-[#050609] hover:bg-white/10 text-xs font-mono text-white/70 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 bg-[#050609] hover:bg-white/10 text-xs font-mono text-white/70 transition-colors"
                 title="Register another delegate"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -375,6 +384,23 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                   <div>
                     <span className="text-white/40 block text-[10px]">DELEGATE NAME</span>
                     <span className="text-white font-bold text-sm font-marvel mt-0.5 block">{submittedPass.fullName}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-white/40 block text-[10px]">GENDER</span>
+                    <span className="text-[#F6CC78] font-bold block mt-0.5">
+                      {submittedPass.gender ? (
+                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] uppercase ${
+                          submittedPass.gender === 'Male'
+                            ? 'bg-[#35B9FF]/20 text-[#35B9FF] border border-[#35B9FF]/40'
+                            : 'bg-[#FF5FA2]/20 text-[#FF85BA] border border-[#FF5FA2]/40'
+                        }`}>
+                          {submittedPass.gender}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </span>
                   </div>
 
                   <div>
@@ -456,6 +482,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                 <a
                   href={emailService.getMailtoUrl({
                     fullName: submittedPass.fullName,
+                    gender: submittedPass.gender,
                     email: submittedPass.email,
                     phone: submittedPass.phone,
                     role: submittedPass.role,
@@ -554,10 +581,79 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                       />
                     </div>
 
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-[#F6CC78] mb-1.5 flex items-center justify-between">
+                        <span>[ 02 ] Gender (Male / Female) *</span>
+                        <span className="text-[10px] text-white/50 font-mono">Select Male or Female</span>
+                      </label>
+                      <select
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3 rounded-xl bg-[#0D1326] border border-white/15 text-white font-montserrat text-sm focus:outline-none focus:border-[#D4A72C] focus:ring-1 focus:ring-[#D4A72C] transition-colors cursor-pointer"
+                      >
+                        <option value="" disabled className="bg-[#050609] text-white/40">
+                          -- Choose Gender (Male / Female) --
+                        </option>
+                        <option value="Male" className="bg-[#050609] text-white">
+                          Male
+                        </option>
+                        <option value="Female" className="bg-[#050609] text-white">
+                          Female
+                        </option>
+                      </select>
+
+                      {/* Quick Choice Buttons */}
+                      <div className="grid grid-cols-2 gap-2.5 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            audioEngine.playTacticalClick();
+                            setFormData((prev) => ({ ...prev, gender: 'Male' }));
+                            setErrorMsg('');
+                          }}
+                          className={`py-2 px-3 rounded-lg border text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            formData.gender === 'Male'
+                              ? 'bg-[#35B9FF]/20 border-[#35B9FF] text-[#35B9FF] shadow-[0_0_12px_rgba(53,185,255,0.35)] ring-1 ring-[#35B9FF]'
+                              : 'bg-[#050609] border-white/15 text-white/60 hover:text-white hover:border-white/30'
+                          }`}
+                        >
+                          <span className={`w-3 h-3 rounded-full border flex items-center justify-center ${
+                            formData.gender === 'Male' ? 'border-[#35B9FF]' : 'border-white/40'
+                          }`}>
+                            {formData.gender === 'Male' && <span className="w-1.5 h-1.5 rounded-full bg-[#35B9FF]" />}
+                          </span>
+                          <span>MALE</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            audioEngine.playTacticalClick();
+                            setFormData((prev) => ({ ...prev, gender: 'Female' }));
+                            setErrorMsg('');
+                          }}
+                          className={`py-2 px-3 rounded-lg border text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            formData.gender === 'Female'
+                              ? 'bg-[#FF5FA2]/20 border-[#FF5FA2] text-[#FF85BA] shadow-[0_0_12px_rgba(255,95,162,0.35)] ring-1 ring-[#FF5FA2]'
+                              : 'bg-[#050609] border-white/15 text-white/60 hover:text-white hover:border-white/30'
+                          }`}
+                        >
+                          <span className={`w-3 h-3 rounded-full border flex items-center justify-center ${
+                            formData.gender === 'Female' ? 'border-[#FF5FA2]' : 'border-white/40'
+                          }`}>
+                            {formData.gender === 'Female' && <span className="w-1.5 h-1.5 rounded-full bg-[#FF85BA]" />}
+                          </span>
+                          <span>FEMALE</span>
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-mono uppercase text-[#F6CC78] mb-1.5">
-                          [ 02 ] Communications Email *
+                          [ 03 ] Communications Email *
                         </label>
                         <input
                           type="email"
@@ -572,7 +668,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
 
                       <div>
                         <label className="block text-xs font-mono uppercase text-[#F6CC78] mb-1.5">
-                          [ 03 ] WhatsApp / Phone *
+                          [ 04 ] WhatsApp / Phone *
                         </label>
                         <input
                           type="tel"
@@ -588,7 +684,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
 
                     <div>
                       <label className="block text-xs font-mono uppercase text-[#F6CC78] mb-1.5">
-                        [ 04 ] University / Faculty & Field of Study
+                        [ 05 ] University / Faculty & Field of Study
                       </label>
                       <input
                         type="text"

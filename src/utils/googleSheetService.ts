@@ -2,6 +2,7 @@
 
 export interface DelegateRecord {
   fullName: string;
+  gender?: string;
   email: string;
   phone: string;
   university?: string;
@@ -27,6 +28,7 @@ const STORAGE_KEY_PENDING_QUEUE = 'sms_2k26_pending_queue';
 const SEED_DELEGATES: DelegateRecord[] = [
   {
     fullName: "Youssef Ben Salem",
+    gender: "Male",
     email: "youssef.bensalem@aiesec.net",
     phone: "+216 28 450 112",
     university: "FSEG Sfax",
@@ -44,6 +46,7 @@ const SEED_DELEGATES: DelegateRecord[] = [
   },
   {
     fullName: "Mariem Trabelsi",
+    gender: "Female",
     email: "mariem.trabelsi@aiesec.net",
     phone: "+216 55 902 314",
     university: "ENIS Sfax",
@@ -61,6 +64,7 @@ const SEED_DELEGATES: DelegateRecord[] = [
   },
   {
     fullName: "Amine Khemakhem",
+    gender: "Male",
     email: "amine.khemakhem@aiesec.net",
     phone: "+216 20 114 875",
     university: "IHEC Sfax",
@@ -201,6 +205,7 @@ class GoogleSheetService {
         timestamp: record.timestamp || new Date().toLocaleString(),
         clearanceId: record.clearanceId,
         fullName: record.fullName,
+        gender: record.gender || '',
         email: record.email,
         phone: record.phone,
         role: record.role,
@@ -366,6 +371,7 @@ class GoogleSheetService {
       'Timestamp',
       'Clearance ID',
       'Delegate Full Name',
+      'Gender',
       'Email Address',
       'WhatsApp / Mobile',
       'Leadership Role',
@@ -390,6 +396,7 @@ class GoogleSheetService {
       escapeCsv(r.timestamp),
       escapeCsv(r.clearanceId),
       escapeCsv(r.fullName),
+      escapeCsv(r.gender || ''),
       escapeCsv(r.email),
       escapeCsv(r.phone),
       escapeCsv(r.role),
@@ -427,6 +434,7 @@ class GoogleSheetService {
       'Timestamp',
       'Clearance ID',
       'Delegate Full Name',
+      'Gender',
       'Email Address',
       'WhatsApp / Mobile',
       'Leadership Role',
@@ -445,6 +453,7 @@ class GoogleSheetService {
       r.timestamp || '',
       r.clearanceId || '',
       r.fullName || '',
+      r.gender || '',
       r.email || '',
       r.phone || '',
       r.role || '',
@@ -566,6 +575,7 @@ function doPost(e) {
       formattedTimestamp,
       data.clearanceId || ("SMS-2K26-" + Utilities.getUuid().substring(0, 4).toUpperCase()),
       data.fullName.trim(),
+      data.gender || "",
       data.email.trim(),
       formattedPhone,
       data.role || "Delegate / Member",
@@ -622,6 +632,7 @@ function ensureHeaders(sheet) {
       "Timestamp",
       "Clearance ID",
       "Delegate Full Name",
+      "Gender",
       "Email Address",
       "WhatsApp / Mobile",
       "Leadership Role",

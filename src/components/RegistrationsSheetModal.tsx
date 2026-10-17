@@ -45,6 +45,7 @@ export const RegistrationsSheetModal: React.FC<RegistrationsSheetModalProps> = (
     const q = searchQuery.toLowerCase();
     return (
       r.fullName.toLowerCase().includes(q) ||
+      (r.gender && r.gender.toLowerCase().includes(q)) ||
       r.email.toLowerCase().includes(q) ||
       r.phone.toLowerCase().includes(q) ||
       r.role.toLowerCase().includes(q) ||
@@ -259,6 +260,7 @@ export const RegistrationsSheetModal: React.FC<RegistrationsSheetModalProps> = (
                   <tr className="border-b border-white/15 bg-[#0D1326] text-white/60 uppercase sticky top-0 z-10 text-[11px]">
                     <th className="py-3 px-3">Clearance</th>
                     <th className="py-3 px-4">Delegate Name</th>
+                    <th className="py-3 px-3">Gender</th>
                     <th className="py-3 px-4">Email / Phone</th>
                     <th className="py-3 px-3">Role</th>
                     <th className="py-3 px-3">Infinity Stone</th>
@@ -269,7 +271,7 @@ export const RegistrationsSheetModal: React.FC<RegistrationsSheetModalProps> = (
                 <tbody className="divide-y divide-white/5">
                   {filteredRegistrations.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-white/40">
+                      <td colSpan={8} className="py-12 text-center text-white/40">
                         No registrations match the current filter.
                       </td>
                     </tr>
@@ -285,6 +287,19 @@ export const RegistrationsSheetModal: React.FC<RegistrationsSheetModalProps> = (
                             <span className="block text-[10px] text-white/40 font-mono font-normal">
                               {reg.university}
                             </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3">
+                          {reg.gender ? (
+                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              reg.gender.toLowerCase() === 'male' || reg.gender.toLowerCase() === 'boy'
+                                ? 'bg-[#35B9FF]/15 border border-[#35B9FF]/40 text-[#35B9FF]'
+                                : 'bg-[#FF5FA2]/15 border border-[#FF5FA2]/40 text-[#FF85BA]'
+                            }`}>
+                              {reg.gender}
+                            </span>
+                          ) : (
+                            <span className="text-white/30 text-[11px]">—</span>
                           )}
                         </td>
                         <td className="py-3 px-4">

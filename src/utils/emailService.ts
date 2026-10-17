@@ -1,6 +1,7 @@
 // S.H.I.E.L.D. Tactical Comms & Email Dispatch Engine
 export interface TicketEmailPayload {
   fullName: string;
+  gender?: string;
   email: string;
   phone: string;
   university?: string;
@@ -74,7 +75,7 @@ class TacticalEmailService {
 
         <div class="field-row">
           <div class="field-label">DELEGATE CODENAME</div>
-          <div class="field-value">${payload.fullName}</div>
+          <div class="field-value">${payload.fullName}${payload.gender ? ` &bull; <span style="font-size: 13px; color: #F6CC78;">${payload.gender}</span>` : ''}</div>
         </div>
 
         <div class="field-row">
@@ -176,6 +177,7 @@ class TacticalEmailService {
       `SMS 2K26 — SFAX MOTIVATIONAL SEMINAR\n` +
       `OFFICIAL VIP DELEGATE PASS\n\n` +
       `Delegate Codename: ${payload.fullName}\n` +
+      (payload.gender ? `Gender: ${payload.gender}\n` : '') +
       `Security Clearance ID: ${payload.clearanceId}\n` +
       `Leadership Role: ${payload.role || 'Commissioned Delegate'}\n` +
       `Primordial Stone: ${payload.stoneName.toUpperCase()} (${payload.stoneAttribute})\n` +
