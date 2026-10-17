@@ -799,26 +799,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
 
                     {/* Conference Fee Agreement Box */}
                     <div className="p-4 sm:p-5 rounded-xl bg-[#0D1326]/80 border border-[#D4A72C]/40 text-left">
-                      <div className="flex items-center justify-between gap-3 mb-2">
-                        <span className="text-xs font-mono uppercase tracking-widest text-[#F6CC78] font-bold">
-                          CONFERENCE FEE & PASS
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#D4A72C]/20 text-[#F6CC78] border border-[#D4A72C]/50 shadow-[0_0_10px_rgba(212,167,44,0.3)]">
-                          150 DT
-                        </span>
-                      </div>
-                      
-                      <p className="text-xs text-white/70 font-grotesk leading-relaxed">
-                        Includes full 3-day conference access, accommodation at Hôtel Monastir Center, official delegate kit, all meals & catering, and national certification.
-                      </p>
-
-                      <label className="mt-3.5 flex items-start sm:items-center gap-3 cursor-pointer select-none group">
+                      <label className="flex items-center gap-3 cursor-pointer select-none group">
                         <input
                           type="checkbox"
                           name="agreedToFee"
                           checked={formData.agreedToFee}
                           onChange={handleCheckboxChange}
-                          className="w-4 h-4 mt-0.5 sm:mt-0 rounded text-[#D4A72C] focus:ring-[#D4A72C] border-white/30 bg-[#050609] cursor-pointer"
+                          className="w-4 h-4 rounded text-[#D4A72C] focus:ring-[#D4A72C] border-white/30 bg-[#050609] cursor-pointer"
                         />
                         <span className="text-xs font-mono text-[#F6CC78] font-bold group-hover:text-white transition-colors">
                           I AGREE TO PAY 150 DT TO THE CONFERENCE FEES *
