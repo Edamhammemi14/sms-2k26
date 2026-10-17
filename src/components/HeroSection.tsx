@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowDown, ArrowRight, Calendar, MapPin, Zap, Flame, Shield, Sparkles, Play, Music } from 'lucide-react';
+import { ArrowDown, ArrowRight, Calendar, MapPin, Zap, Flame, Shield, Sparkles, Play } from 'lucide-react';
 import { infinityStones } from '../data/stonesData';
 import { FacetedStone } from './FacetedStone';
 import { audioEngine } from '../utils/audioEngine';
@@ -245,17 +245,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <span>PROLOGUE</span>
                   </button>
                 )}
-
-                <button
-                  onClick={() => {
-                    audioEngine.toggleOfficialAvengersTheme();
-                  }}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded border border-[#D4A72C]/40 bg-[#0D1326]/80 hover:bg-[#D4A72C]/20 hover:border-[#F6CC78] text-[#F6CC78] font-marvel font-bold text-xs tracking-[0.16em] uppercase transition-all duration-300 shadow-[0_0_15px_rgba(212,167,44,0.2)] active:scale-95"
-                  title="Play / Pause Marvel Studios Opening Theme song"
-                >
-                  <Music className="w-3.5 h-3.5 text-[#D4A72C] animate-pulse" />
-                  <span>MARVEL THEME</span>
-                </button>
               </div>
             </div>
 
