@@ -25,6 +25,7 @@ interface RegistrationData {
   emergencyPhone: string;
   motivation: string;
   agreedToOath: boolean;
+  agreedToFee: boolean;
   clearanceId?: string;
   timestamp?: string;
 }
@@ -42,6 +43,7 @@ const initialForm: RegistrationData = {
   emergencyPhone: '',
   motivation: '',
   agreedToOath: false,
+  agreedToFee: false,
 };
 
 const leadershipRoles = [
@@ -114,7 +116,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, agreedToOath: e.target.checked }));
+    const { name, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name || 'agreedToOath']: checked }));
     setErrorMsg('');
   };
 
@@ -148,6 +151,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
     } else if (step === 4) {
       if (!formData.agreedToOath) {
         setErrorMsg('You must take the Delegate Oath of SMS 2K26 to proceed.');
+        return false;
+      }
+      if (!formData.agreedToFee) {
+        setErrorMsg('Please agree to pay the 150 DT conference fees to proceed.');
         return false;
       }
     }
@@ -213,6 +220,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
         emergencyContact: newPass.emergencyContact,
         emergencyPhone: newPass.emergencyPhone,
         motivation: newPass.motivation,
+        feeAgreed: newPass.agreedToFee ? '150 DT (Confirmed)' : '150 DT',
         clearanceId: clearanceCode,
         timestamp: formattedTimestamp,
       });
@@ -384,6 +392,19 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                   <div>
                     <span className="text-white/40 block text-[10px]">CONVERGENCE VENUE</span>
                     <span className="text-white block mt-0.5">Hôtel Monastir Center • Oct 23–25</span>
+                  </div>
+
+                  <div className="sm:col-span-2 pt-2 border-t border-white/10 flex items-center justify-between">
+                    <div>
+                      <span className="text-white/40 block text-[10px]">CONFERENCE DELEGATE FEE</span>
+                      <span className="text-[#45D483] font-bold text-xs mt-0.5 flex items-center gap-1.5 font-mono">
+                        <Check className="w-3.5 h-3.5 text-[#45D483]" />
+                        <span>150 DT — CONFIRMED & COMMITTED</span>
+                      </span>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-[#D4A72C]/20 border border-[#D4A72C]/50 text-[#F6CC78] text-[11px] font-mono font-bold">
+                      150 DT
+                    </span>
                   </div>
                 </div>
 
@@ -765,12 +786,42 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                       <label className="mt-4 flex items-center gap-3 cursor-pointer select-none">
                         <input
                           type="checkbox"
+                          name="agreedToOath"
                           checked={formData.agreedToOath}
                           onChange={handleCheckboxChange}
                           className="w-4 h-4 rounded text-[#D4A72C] focus:ring-[#D4A72C] border-white/30 bg-[#050609]"
                         />
                         <span className="text-xs font-mono text-[#F6CC78] font-bold">
                           I SOLEMNLY SWEAR THE OATH OF SMS 2K26 *
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* Conference Fee Agreement Box */}
+                    <div className="p-4 sm:p-5 rounded-xl bg-[#0D1326]/80 border border-[#D4A72C]/40 text-left">
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <span className="text-xs font-mono uppercase tracking-widest text-[#F6CC78] font-bold">
+                          CONFERENCE FEE & PASS
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#D4A72C]/20 text-[#F6CC78] border border-[#D4A72C]/50 shadow-[0_0_10px_rgba(212,167,44,0.3)]">
+                          150 DT
+                        </span>
+                      </div>
+                      
+                      <p className="text-xs text-white/70 font-grotesk leading-relaxed">
+                        Includes full 3-day conference access, accommodation at Hôtel Monastir Center, official delegate kit, all meals & catering, and national certification.
+                      </p>
+
+                      <label className="mt-3.5 flex items-start sm:items-center gap-3 cursor-pointer select-none group">
+                        <input
+                          type="checkbox"
+                          name="agreedToFee"
+                          checked={formData.agreedToFee}
+                          onChange={handleCheckboxChange}
+                          className="w-4 h-4 mt-0.5 sm:mt-0 rounded text-[#D4A72C] focus:ring-[#D4A72C] border-white/30 bg-[#050609] cursor-pointer"
+                        />
+                        <span className="text-xs font-mono text-[#F6CC78] font-bold group-hover:text-white transition-colors">
+                          I AGREE TO PAY 150 DT TO THE CONFERENCE FEES *
                         </span>
                       </label>
                     </div>

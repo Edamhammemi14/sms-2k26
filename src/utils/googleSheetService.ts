@@ -14,6 +14,7 @@ export interface DelegateRecord {
   emergencyContact?: string;
   emergencyPhone?: string;
   motivation?: string;
+  feeAgreed?: string;
   clearanceId: string;
   timestamp: string;
 }
@@ -212,6 +213,7 @@ class GoogleSheetService {
         emergencyContact: record.emergencyContact || '',
         emergencyPhone: record.emergencyPhone || '',
         motivation: record.motivation || '',
+        feeAgreed: record.feeAgreed || '150 DT (Confirmed)',
       };
 
       // To avoid CORS preflight rejection by Google Apps Script, we send as text/plain.
@@ -375,6 +377,7 @@ class GoogleSheetService {
       'Emergency Contact Name',
       'Emergency Contact Phone',
       'Motivation Oath',
+      'Conference Fee',
     ];
 
     const escapeCsv = (val: string | undefined): string => {
@@ -398,6 +401,7 @@ class GoogleSheetService {
       escapeCsv(r.emergencyContact),
       escapeCsv(r.emergencyPhone),
       escapeCsv(r.motivation),
+      escapeCsv(r.feeAgreed || '150 DT (Confirmed)'),
     ]);
 
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((row) => row.join(','))].join('\r\n');
@@ -434,6 +438,7 @@ class GoogleSheetService {
       'Emergency Contact Name',
       'Emergency Contact Phone',
       'Motivation Oath',
+      'Conference Fee',
     ];
 
     const rows = records.map((r) => [
@@ -451,6 +456,7 @@ class GoogleSheetService {
       r.emergencyContact || '',
       r.emergencyPhone || '',
       (r.motivation || '').replace(/\r?\n|\r/g, ' '),
+      r.feeAgreed || '150 DT (Confirmed)',
     ]);
 
     const tsvContent = [headers.join('\t'), ...rows.map((row) => row.join('\t'))].join('\n');

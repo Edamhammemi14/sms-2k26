@@ -152,7 +152,8 @@ function doPost(e) {
       (data.allergyDetails && data.allergyDetails.trim()) ? data.allergyDetails.trim() : "None",
       data.emergencyContact || "",
       formattedEmergencyPhone,
-      data.motivation || ""
+      data.motivation || "",
+      data.feeAgreed || "150 DT (Confirmed)"
     ];
 
     // 6. Append row
@@ -223,7 +224,8 @@ function ensureHeaders(sheet) {
       "Allergy Safeguards",
       "Emergency Contact Name",
       "Emergency Contact Phone",
-      "Motivation Oath"
+      "Motivation Oath",
+      "Conference Fee"
     ];
 
     sheet.appendRow(headers);
