@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <circle cx="50" cy="50" r="48" fill="#080A12" stroke="#7B2CFF" stroke-width="2"/>
+  <circle cx="50" cy="50" r="38" stroke="#35B9FF" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+  
+  <!-- Six Stones orbiting center -->
+  <!-- Power Stone (Red) -->
+  <circle cx="50" cy="18" r="7" fill="#F04452" filter="drop-shadow(0 0 8px #F04452)"/>
+  <!-- Space Stone (Blue) -->
+  <circle cx="78" cy="34" r="7" fill="#35B9FF" filter="drop-shadow(0 0 8px #35B9FF)"/>
+  <!-- Mind Stone (Gold) -->
+  <circle cx="78" cy="66" r="7" fill="#F5C451" filter="drop-shadow(0 0 8px #F5C451)"/>
+  <!-- Reality Stone (Crimson) -->
+  <circle cx="50" cy="82" r="7" fill="#D62E45" filter="drop-shadow(0 0 8px #D62E45)"/>
+  <!-- Time Stone (Emerald) -->
+  <circle cx="22" cy="66" r="7" fill="#45D483" filter="drop-shadow(0 0 8px #45D483)"/>
+  <!-- Soul Stone (Amber) -->
+  <circle cx="22" cy="34" r="7" fill="#FF8C42" filter="drop-shadow(0 0 8px #FF8C42)"/>
+  
+  <!-- Center Core -->
+  <polygon points="50,40 59,45 59,55 50,60 41,55 41,45" fill="#7B2CFF" filter="drop-shadow(0 0 10px #7B2CFF)"/>
+  <circle cx="50" cy="50" r="3" fill="#FFFFFF"/>
+</svg>

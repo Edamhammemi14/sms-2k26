@@ -1,0 +1,361 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cosmic-black: #080A12;
+  --space-navy: #10182B;
+  --infinity-purple: #7B2CFF;
+  --power-red: #F04452;
+  --space-blue: #35B9FF;
+  --mind-gold: #F5C451;
+  --reality-crimson: #D62E45;
+  --time-emerald: #45D483;
+  --soul-amber: #FF8C42;
+  --pure-white: #F4F5FA;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #080A12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 4px;
+  border: 1px solid rgba(123, 44, 255, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7B2CFF;
+}
+
+/* Base Body Styles with Enhanced Typography Smoothing & Mobile Touch Responsiveness */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: #050609;
+  color: #F4F5FA;
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Smooth Momentum Scrolling for Touch Containers */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for clean horizontal swipe on mobile */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* HUD & Futuristic Borders (Imperial Gold) */
+.hud-corner-tl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid #D4A72C;
+  border-left: 2px solid #D4A72C;
+}
+
+.hud-corner-tr {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid #D4A72C;
+  border-right: 2px solid #D4A72C;
+}
+
+.hud-corner-bl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-bottom: 2px solid #D4A72C;
+  border-left: 2px solid #D4A72C;
+}
+
+.hud-corner-br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  border-bottom: 2px solid #D4A72C;
+  border-right: 2px solid #D4A72C;
+}
+
+/* Cosmic Glow & Text Effects */
+.text-glow-purple {
+  text-shadow: 0 0 15px rgba(123, 44, 255, 0.7), 0 0 30px rgba(123, 44, 255, 0.4);
+}
+
+.text-glow-gold {
+  text-shadow: 0 0 15px rgba(245, 196, 81, 0.7), 0 0 30px rgba(245, 196, 81, 0.3);
+}
+
+.text-glow-blue {
+  text-shadow: 0 0 15px rgba(53, 185, 255, 0.7), 0 0 30px rgba(53, 185, 255, 0.3);
+}
+
+/* Subtle scanlines effect */
+.scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Orbit animations */
+@keyframes orbitClockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbitCounterClockwise {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-orbit {
+  animation: orbitClockwise 35s linear infinite;
+}
+
+.animate-orbit-reverse {
+  animation: orbitCounterClockwise 45s linear infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   CINEMATIC MARVEL STUDIOS & ANAMORPHIC FILM DIRECTION
+   ========================================================================== */
+
+/* 35mm Celluloid Film Grain Texture - High Performance (No GPU Thrashing) */
+.film-grain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.3;
+}
+
+@keyframes stoneFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-stone-float {
+  animation: stoneFloat 4s ease-in-out infinite;
+}
+
+/* Anamorphic Lens Flare Line */
+.anamorphic-streak {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent 0%, rgba(53, 185, 255, 0) 15%, rgba(53, 185, 255, 0.9) 50%, rgba(245, 196, 81, 0.8) 52%, rgba(53, 185, 255, 0.9) 54%, rgba(53, 185, 255, 0) 85%, transparent 100%);
+  filter: drop-shadow(0 0 8px #35b9ff) drop-shadow(0 0 20px rgba(53, 185, 255, 0.6));
+  pointer-events: none;
+}
+
+/* Marvel Studios Chiselled Metallic Text with Smooth Anti-Aliasing */
+.marvel-title {
+  font-family: 'Cinzel', serif;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 35%, #94A3B8 70%, #CBD5E1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9)) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.8));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-rendering: optimizeLegibility;
+}
+
+.marvel-gold-title {
+  font-family: 'Cinzel', serif;
+  background: linear-gradient(180deg, #FFFDF5 0%, #F6CC78 35%, #D4A72C 70%, #996B12 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 35px rgba(212, 167, 44, 0.45));
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-rendering: optimizeLegibility;
+}
+
+@keyframes goldShine {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.marvel-shimmer {
+  background: linear-gradient(90deg, #D4A72C 0%, #FFFDF5 25%, #F6CC78 50%, #D4A72C 75%, #D4A72C 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldShine 8s linear infinite;
+}
+
+.marvel-subhead {
+  font-family: 'Cinzel', 'Orbitron', 'Space Grotesk', sans-serif;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+/* Tactical S.H.I.E.L.D. Chamfered Panels (No generic rounded pill cards!) */
+.tactical-panel {
+  clip-path: polygon(
+    0 14px,
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    14px 100%,
+    0 calc(100% - 14px)
+  );
+}
+
+.tactical-panel-sm {
+  clip-path: polygon(
+    0 8px,
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px)
+  );
+}
+
+/* Anamorphic Vignette */
+.cinematic-vignette {
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.85), inset 0 0 250px rgba(0, 0, 0, 0.95);
+  pointer-events: none;
+}
+
+/* Crystal Shimmer Beam */
+@keyframes crystalSweep {
+  0% {
+    transform: translateX(-150%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(250%) rotate(25deg);
+  }
+}
+
+.animate-crystal-sweep {
+  animation: crystalSweep 4s ease-in-out infinite;
+}
+
+/* Epic Pulsing Cosmic Beacon for Assemble CTA (Mise en valeur) */
+@keyframes assembleGlow {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(212, 167, 44, 0.6), 0 0 50px rgba(212, 167, 44, 0.35), inset 0 0 15px rgba(255, 255, 255, 0.45);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(246, 204, 120, 0.95), 0 0 85px rgba(212, 167, 44, 0.6), inset 0 0 25px rgba(255, 255, 255, 0.75);
+    transform: scale(1.025);
+  }
+}
+
+.assemble-btn-epic {
+  animation: assembleGlow 3s ease-in-out infinite;
+}
+
+@keyframes beaconAura {
+  0% {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.08, 1.25);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.12, 1.35);
+    opacity: 0;
+  }
+}
+
+.beacon-aura {
+  animation: beaconAura 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
