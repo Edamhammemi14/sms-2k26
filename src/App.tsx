@@ -13,6 +13,7 @@ import { SafehouseVenue } from './components/SafehouseVenue';
 import { CallToAction } from './components/CallToAction';
 import { Footer } from './components/Footer';
 import { RegistrationModal } from './components/RegistrationModal';
+import { RegistrationsSheetModal } from './components/RegistrationsSheetModal';
 import { EasterEggModal } from './components/EasterEggModal';
 import { audioEngine } from './utils/audioEngine';
 
@@ -21,6 +22,7 @@ export const App: React.FC = () => {
   const [activeStoneColor, setActiveStoneColor] = useState('#D4A72C'); // Imperial Gold (Official SMS 2K26 Primary)
   const [selectedStoneId, setSelectedStoneId] = useState<string | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isRosterOpen, setIsRosterOpen] = useState(false);
   const [isEasterEggOpen, setIsEasterEggOpen] = useState(false);
   const [isScreenSnapped, setIsScreenSnapped] = useState(false);
 
@@ -139,12 +141,19 @@ export const App: React.FC = () => {
       <Footer
         onOpenRegister={() => setIsRegisterOpen(true)}
         onTriggerSnap={triggerSnapExperience}
+        onOpenRoster={() => setIsRosterOpen(true)}
       />
 
       {/* Interactive Registration Modal */}
       <RegistrationModal
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
+      />
+
+      {/* Centralized Registrations Roster & Google Sheets Modal */}
+      <RegistrationsSheetModal
+        isOpen={isRosterOpen}
+        onClose={() => setIsRosterOpen(false)}
       />
 
       {/* Classified Infinity Gauntlet Snap Easter Egg Modal */}

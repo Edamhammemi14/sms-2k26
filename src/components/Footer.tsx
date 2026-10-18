@@ -6,9 +6,10 @@ import { googleSheetService } from '../utils/googleSheetService';
 interface FooterProps {
   onOpenRegister: () => void;
   onTriggerSnap: () => void;
+  onOpenRoster?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenRegister, onTriggerSnap }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenRegister, onTriggerSnap, onOpenRoster }) => {
   const scrollToTop = () => {
     audioEngine.playTacticalClick();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -111,10 +112,23 @@ export const Footer: React.FC<FooterProps> = ({ onOpenRegister, onTriggerSnap })
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {onOpenRoster && (
+              <button
+                onClick={() => {
+                  audioEngine.playTacticalClick();
+                  onOpenRoster();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#D4A72C]/40 bg-[#0D1326] hover:bg-[#D4A72C]/20 text-[#F6CC78] hover:text-white transition-all text-xs font-mono"
+                title="S.H.I.E.L.D. Registrations Roster & Google Sheets"
+              >
+                <Table className="w-3.5 h-3.5 text-[#D4A72C]" />
+                <span>ORGANIZER ROSTER</span>
+              </button>
+            )}
 
             <button
               onClick={scrollToTop}
-              className="flex items-center gap-2 px-3 py-1.5 rounded border border-white/10 bg-[#0D1326] hover:bg-white/10 text-white/60 hover:text-white transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 rounded border border-white/10 bg-[#0D1326] hover:bg-white/10 text-white/60 hover:text-white transition-all text-xs font-mono"
               aria-label="Scroll back to top"
             >
               <span>BACK TO TOP</span>
