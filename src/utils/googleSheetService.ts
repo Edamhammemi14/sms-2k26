@@ -706,6 +706,29 @@ function ensureHeaders(sheet) {
       genderCell.setVerticalAlignment("middle");
       sheet.setColumnWidth(4, 120);
     }
+
+    // Ensure "Conference Fee" column exists
+    var lastColNow = sheet.getLastColumn();
+    var currentHeaders = sheet.getRange(1, 1, 1, lastColNow).getValues()[0];
+    var hasFee = false;
+    for (var j = 0; j < currentHeaders.length; j++) {
+      if (String(currentHeaders[j]).trim().toLowerCase().indexOf("fee") !== -1) {
+        hasFee = true;
+        break;
+      }
+    }
+    if (!hasFee) {
+      var feeCol = lastColNow + 1;
+      var feeCell = sheet.getRange(1, feeCol);
+      feeCell.setValue("Conference Fee");
+      feeCell.setBackground(CONFIG.HEADER_BG);
+      feeCell.setFontColor(CONFIG.HEADER_TEXT);
+      feeCell.setFontWeight("bold");
+      feeCell.setFontFamily("Montserrat");
+      feeCell.setFontSize(11);
+      feeCell.setVerticalAlignment("middle");
+      sheet.setColumnWidth(feeCol, 160);
+    }
   }
 }
 `;
