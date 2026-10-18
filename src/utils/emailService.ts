@@ -12,6 +12,7 @@ export interface TicketEmailPayload {
   clearanceId: string;
   dietary?: string;
   allergyDetails?: string;
+  singleRoom?: boolean;
   timestamp: string;
 }
 
@@ -81,6 +82,11 @@ class TacticalEmailService {
         <div class="field-row">
           <div class="field-label">LEADERSHIP ROLE</div>
           <div class="field-value">${payload.role || 'Commissioned Delegate'}</div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">CONFERENCE PASS & ACCOMMODATION</div>
+          <div class="field-value" style="color: #45D483;">${payload.singleRoom ? '190 DT &bull; Single Room (Private)' : '150 DT &bull; Standard Room (Shared)'}</div>
         </div>
 
         <div class="stone-box">
@@ -180,6 +186,7 @@ class TacticalEmailService {
       (payload.gender ? `Gender: ${payload.gender}\n` : '') +
       `Security Clearance ID: ${payload.clearanceId}\n` +
       `Leadership Role: ${payload.role || 'Commissioned Delegate'}\n` +
+      `Accommodation & Fee: ${payload.singleRoom ? '190 DT (Single Room)' : '150 DT (Standard Room)'}\n` +
       `Primordial Stone: ${payload.stoneName.toUpperCase()} (${payload.stoneAttribute})\n` +
       (payload.allergyDetails ? `Allergy Safeguard: ${payload.allergyDetails}\n` : '') +
       `Convergence Dates: October 23–25, 2026\n` +

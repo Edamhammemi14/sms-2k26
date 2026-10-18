@@ -263,6 +263,7 @@ export const RegistrationsSheetModal: React.FC<RegistrationsSheetModalProps> = (
                     <th className="py-3 px-3">Gender</th>
                     <th className="py-3 px-4">Email / Phone</th>
                     <th className="py-3 px-3">Role</th>
+                    <th className="py-3 px-3">Room / Fee</th>
                     <th className="py-3 px-3">Infinity Stone</th>
                     <th className="py-3 px-3">Allergy Safeguard</th>
                     <th className="py-3 px-3">Timestamp</th>
@@ -271,7 +272,7 @@ export const RegistrationsSheetModal: React.FC<RegistrationsSheetModalProps> = (
                 <tbody className="divide-y divide-white/5">
                   {filteredRegistrations.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-white/40">
+                      <td colSpan={9} className="py-12 text-center text-white/40">
                         No registrations match the current filter.
                       </td>
                     </tr>
@@ -308,6 +309,17 @@ export const RegistrationsSheetModal: React.FC<RegistrationsSheetModalProps> = (
                         </td>
                         <td className="py-3 px-3 text-white/70">
                           {reg.role}
+                        </td>
+                        <td className="py-3 px-3">
+                          {reg.singleRoom || (reg.feeAgreed && reg.feeAgreed.includes('190')) ? (
+                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#D4A72C]/20 border border-[#D4A72C]/50 text-[#F6CC78] whitespace-nowrap">
+                              190 DT (Single)
+                            </span>
+                          ) : (
+                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-white/5 border border-white/10 text-white/70 whitespace-nowrap">
+                              150 DT (Standard)
+                            </span>
+                          )}
                         </td>
                         <td className="py-3 px-3">
                           <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#D4A72C]/10 border border-[#D4A72C]/30 text-[#F6CC78]">

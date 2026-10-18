@@ -114,9 +114,17 @@ function doPost(e) {
     
     var lastRow = sheet.getLastRow();
     if (lastRow > 1) {
-      // Column B is Clearance ID (col 2), Column D is Email (col 4)
-      var existingIds = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
-      var existingEmails = sheet.getRange(2, 4, lastRow - 1, 1).getValues();
+      var headerVals = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var clearanceCol = 2;
+      var emailCol = 5;
+      for (var c = 0; c < headerVals.length; c++) {
+        var hText = String(headerVals[c]).trim().toLowerCase();
+        if (hText.indexOf("clearance") !== -1) clearanceCol = c + 1;
+        if (hText.indexOf("email") !== -1) emailCol = c + 1;
+      }
+
+      var existingIds = sheet.getRange(2, clearanceCol, lastRow - 1, 1).getValues();
+      var existingEmails = sheet.getRange(2, emailCol, lastRow - 1, 1).getValues();
 
       for (var i = 0; i < existingIds.length; i++) {
         var existingId = String(existingIds[i][0]).trim();
@@ -142,6 +150,7 @@ function doPost(e) {
       formattedTimestamp,
       data.clearanceId || ("SMS-2K26-" + Utilities.getUuid().substring(0, 4).toUpperCase()),
       data.fullName.trim(),
+      data.gender || "",
       data.email.trim(),
       formattedPhone,
       data.role || "Delegate / Member",
@@ -206,28 +215,29 @@ function getOrCreateTargetSheet(ss) {
 }
 
 /**
- * Creates and formats column headers if sheet is empty.
+ * Creates and formats column headers if sheet is empty, or adds missing columns.
  */
 function ensureHeaders(sheet) {
-  if (sheet.getLastRow() === 0) {
-    var headers = [
-      "Timestamp",
-      "Clearance ID",
-      "Delegate Full Name",
-      "Email Address",
-      "WhatsApp / Mobile",
-      "Leadership Role",
-      "University / Faculty",
-      "Infinity Stone Resonance",
-      "Leadership Pillar",
-      "Dietary Preference",
-      "Allergy Safeguards",
-      "Emergency Contact Name",
-      "Emergency Contact Phone",
-      "Motivation Oath",
-      "Conference Fee"
-    ];
+  var headers = [
+    "Timestamp",
+    "Clearance ID",
+    "Delegate Full Name",
+    "Gender",
+    "Email Address",
+    "WhatsApp / Mobile",
+    "Leadership Role",
+    "University / Faculty",
+    "Infinity Stone Resonance",
+    "Leadership Pillar",
+    "Dietary Preference",
+    "Allergy Safeguards",
+    "Emergency Contact Name",
+    "Emergency Contact Phone",
+    "Motivation Oath",
+    "Conference Fee"
+  ];
 
+  if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
 
     var headerRange = sheet.getRange(1, 1, 1, headers.length);
@@ -249,6 +259,30 @@ function ensureHeaders(sheet) {
       if (sheet.getColumnWidth(col) < 130) {
         sheet.setColumnWidth(col, 140);
       }
+    }
+  } else {
+    // If sheet already exists, ensure "Gender" column exists
+    var lastCol = sheet.getLastColumn();
+    var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var hasGender = false;
+    for (var i = 0; i < existingHeaders.length; i++) {
+      if (String(existingHeaders[i]).trim().toLowerCase() === "gender") {
+        hasGender = true;
+        break;
+      }
+    }
+    // If missing, automatically insert Gender column after Column 3 (Delegate Full Name)
+    if (!hasGender) {
+      sheet.insertColumnAfter(3);
+      var genderCell = sheet.getRange(1, 4);
+      genderCell.setValue("Gender");
+      genderCell.setBackground(CONFIG.HEADER_BG);
+      genderCell.setFontColor(CONFIG.HEADER_TEXT);
+      genderCell.setFontWeight("bold");
+      genderCell.setFontFamily("Montserrat");
+      genderCell.setFontSize(11);
+      genderCell.setVerticalAlignment("middle");
+      sheet.setColumnWidth(4, 120);
     }
   }
 }

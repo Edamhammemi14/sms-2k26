@@ -16,6 +16,7 @@ export interface DelegateRecord {
   emergencyPhone?: string;
   motivation?: string;
   feeAgreed?: string;
+  singleRoom?: boolean;
   clearanceId: string;
   timestamp: string;
 }
@@ -552,11 +553,27 @@ function doPost(e) {
     ensureHeaders(sheet);
 
     var clearanceId = (data.clearanceId || "").trim();
+    var email = (data.email || "").trim().toLowerCase();
+    
     var lastRow = sheet.getLastRow();
-    if (lastRow > 1 && clearanceId) {
-      var existingIds = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+    if (lastRow > 1) {
+      var headerVals = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var clearanceCol = 2;
+      var emailCol = 5;
+      for (var c = 0; c < headerVals.length; c++) {
+        var hText = String(headerVals[c]).trim().toLowerCase();
+        if (hText.indexOf("clearance") !== -1) clearanceCol = c + 1;
+        if (hText.indexOf("email") !== -1) emailCol = c + 1;
+      }
+
+      var existingIds = sheet.getRange(2, clearanceCol, lastRow - 1, 1).getValues();
+      var existingEmails = sheet.getRange(2, emailCol, lastRow - 1, 1).getValues();
+
       for (var i = 0; i < existingIds.length; i++) {
-        if (String(existingIds[i][0]).trim() === clearanceId) {
+        var existingId = String(existingIds[i][0]).trim();
+        var existingEmail = String(existingEmails[i][0]).trim().toLowerCase();
+
+        if (clearanceId && existingId === clearanceId) {
           return ContentService.createTextOutput(JSON.stringify({
             status: "duplicate",
             message: "Registration already recorded with Clearance ID: " + clearanceId,
@@ -586,7 +603,8 @@ function doPost(e) {
       (data.allergyDetails && data.allergyDetails.trim()) ? data.allergyDetails.trim() : "None",
       data.emergencyContact || "",
       formattedEmergencyPhone,
-      data.motivation || ""
+      data.motivation || "",
+      data.feeAgreed || "150 DT (Confirmed)"
     ];
 
     sheet.appendRow(newRow);
@@ -627,25 +645,26 @@ function getOrCreateTargetSheet(ss) {
 }
 
 function ensureHeaders(sheet) {
-  if (sheet.getLastRow() === 0) {
-    var headers = [
-      "Timestamp",
-      "Clearance ID",
-      "Delegate Full Name",
-      "Gender",
-      "Email Address",
-      "WhatsApp / Mobile",
-      "Leadership Role",
-      "University / Faculty",
-      "Infinity Stone Resonance",
-      "Leadership Pillar",
-      "Dietary Preference",
-      "Allergy Safeguards",
-      "Emergency Contact Name",
-      "Emergency Contact Phone",
-      "Motivation Oath"
-    ];
+  var headers = [
+    "Timestamp",
+    "Clearance ID",
+    "Delegate Full Name",
+    "Gender",
+    "Email Address",
+    "WhatsApp / Mobile",
+    "Leadership Role",
+    "University / Faculty",
+    "Infinity Stone Resonance",
+    "Leadership Pillar",
+    "Dietary Preference",
+    "Allergy Safeguards",
+    "Emergency Contact Name",
+    "Emergency Contact Phone",
+    "Motivation Oath",
+    "Conference Fee"
+  ];
 
+  if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
 
     var headerRange = sheet.getRange(1, 1, 1, headers.length);
@@ -663,6 +682,29 @@ function ensureHeaders(sheet) {
       if (sheet.getColumnWidth(col) < 130) {
         sheet.setColumnWidth(col, 140);
       }
+    }
+  } else {
+    // If sheet already exists, ensure "Gender" column exists
+    var lastCol = sheet.getLastColumn();
+    var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var hasGender = false;
+    for (var i = 0; i < existingHeaders.length; i++) {
+      if (String(existingHeaders[i]).trim().toLowerCase() === "gender") {
+        hasGender = true;
+        break;
+      }
+    }
+    if (!hasGender) {
+      sheet.insertColumnAfter(3);
+      var genderCell = sheet.getRange(1, 4);
+      genderCell.setValue("Gender");
+      genderCell.setBackground(CONFIG.HEADER_BG);
+      genderCell.setFontColor(CONFIG.HEADER_TEXT);
+      genderCell.setFontWeight("bold");
+      genderCell.setFontFamily("Montserrat");
+      genderCell.setFontSize(11);
+      genderCell.setVerticalAlignment("middle");
+      sheet.setColumnWidth(4, 120);
     }
   }
 }

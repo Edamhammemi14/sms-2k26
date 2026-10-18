@@ -27,6 +27,7 @@ interface RegistrationData {
   motivation: string;
   agreedToOath: boolean;
   agreedToFee: boolean;
+  singleRoom?: boolean;
   clearanceId?: string;
   timestamp?: string;
 }
@@ -46,11 +47,13 @@ const initialForm: RegistrationData = {
   motivation: '',
   agreedToOath: false,
   agreedToFee: false,
+  singleRoom: false,
 };
 
 const leadershipRoles = [
   'Delegate / Member',
   'Team Leader (TL)',
+  'Middle Manager (MM)',
   'Vice President (LCVP)',
   'Local Committee President (LCP)',
   'Conference Team / OC',
@@ -91,6 +94,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
             clearanceId: parsed.clearanceId || 'SMS-2K26',
             dietary: parsed.dietary,
             allergyDetails: parsed.allergyDetails,
+            singleRoom: parsed.singleRoom,
             timestamp: parsed.timestamp || 'Oct 23–25, 2026',
           }));
         } catch {
@@ -150,6 +154,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
         setErrorMsg('Please enter your tactical WhatsApp or mobile number.');
         return false;
       }
+    } else if (step === 2) {
+      // Step 2 validations (leadership role and emergency contact details)
     } else if (step === 3) {
       if ((formData.dietary === 'Has Allergies' || formData.dietary.includes('Allerg')) && !formData.allergyDetails?.trim()) {
         setErrorMsg('Please specify the exact details of your food or medical allergy.');
@@ -161,7 +167,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
         return false;
       }
       if (!formData.agreedToFee) {
-        setErrorMsg('Please agree to pay the 150 DT conference fees to proceed.');
+        setErrorMsg(`Please agree to pay the ${formData.singleRoom ? '190 DT (Single Room)' : '150 DT'} conference fees to proceed.`);
         return false;
       }
     }
@@ -213,6 +219,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
 
     try {
       // 1. Record registration to Google Sheet & S.H.I.E.L.D. database
+      const feeLabel = newPass.singleRoom ? '190 DT (Single Room)' : '150 DT (Standard Room)';
       const syncResult = await googleSheetService.recordRegistration({
         fullName: newPass.fullName,
         gender: newPass.gender,
@@ -228,7 +235,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
         emergencyContact: newPass.emergencyContact,
         emergencyPhone: newPass.emergencyPhone,
         motivation: newPass.motivation,
-        feeAgreed: newPass.agreedToFee ? '150 DT (Confirmed)' : '150 DT',
+        feeAgreed: newPass.agreedToFee ? `${feeLabel} (Confirmed)` : feeLabel,
+        singleRoom: newPass.singleRoom,
         clearanceId: clearanceCode,
         timestamp: formattedTimestamp,
       });
@@ -257,6 +265,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
         clearanceId: clearanceCode,
         dietary: newPass.dietary,
         allergyDetails: newPass.allergyDetails,
+        singleRoom: newPass.singleRoom,
         timestamp: formattedTimestamp,
       }).then((res) => {
         setIsEmailSending(false);
@@ -425,11 +434,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                       <span className="text-white/40 block text-[10px]">CONFERENCE DELEGATE FEE</span>
                       <span className="text-[#45D483] font-bold text-xs mt-0.5 flex items-center gap-1.5 font-mono">
                         <Check className="w-3.5 h-3.5 text-[#45D483]" />
-                        <span>150 DT — CONFIRMED & COMMITTED</span>
+                        <span>
+                          {submittedPass.singleRoom ? '190 DT (SINGLE ROOM)' : '150 DT (STANDARD ROOM)'} — CONFIRMED & COMMITTED
+                        </span>
                       </span>
                     </div>
                     <span className="px-2.5 py-1 rounded-full bg-[#D4A72C]/20 border border-[#D4A72C]/50 text-[#F6CC78] text-[11px] font-mono font-bold">
-                      150 DT
+                      {submittedPass.singleRoom ? '190 DT' : '150 DT'}
                     </span>
                   </div>
                 </div>
@@ -491,6 +502,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                     stoneHex: selectedStoneObj.hex,
                     clearanceId: submittedPass.clearanceId || 'SMS-2K26',
                     allergyDetails: submittedPass.allergyDetails,
+                    singleRoom: submittedPass.singleRoom,
                     timestamp: submittedPass.timestamp || '',
                   })}
                   onClick={() => audioEngine.playTacticalClick()}
@@ -729,7 +741,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                       </select>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-mono uppercase text-[#F6CC78] mb-1.5">
                           [ 02 ] Emergency Contact Name
@@ -893,6 +905,36 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                       </label>
                     </div>
 
+                    {/* Optional Single Room Choice */}
+                    <div className={`p-4 sm:p-5 rounded-xl border transition-all ${
+                      formData.singleRoom
+                        ? 'bg-[#0D1326] border-[#D4A72C] shadow-[0_0_20px_rgba(212,167,44,0.25)] ring-1 ring-[#D4A72C]'
+                        : 'bg-[#0D1326]/70 border-white/15 hover:border-white/30'
+                    }`}>
+                      <label className="flex items-start gap-3 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          name="singleRoom"
+                          checked={formData.singleRoom || false}
+                          onChange={handleCheckboxChange}
+                          className="w-4 h-4 mt-0.5 rounded text-[#D4A72C] focus:ring-[#D4A72C] border-white/30 bg-[#050609] cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-mono text-[#F6CC78] font-bold">
+                              DO YOU WANT A SINGLE ROOM? (OPTIONAL)
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded bg-[#D4A72C]/20 border border-[#D4A72C]/40 text-[#F6CC78] text-[11px] font-mono font-bold shrink-0">
+                              190 DT
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-white/60 font-grotesk mt-1 leading-relaxed">
+                            Upgrade to private single room accommodation at Hôtel Monastir Center for <strong>190 DT</strong> (Standard shared delegate pass is 150 DT).
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
                     {/* Conference Fee Agreement Box */}
                     <div className="p-4 sm:p-5 rounded-xl bg-[#0D1326]/80 border border-[#D4A72C]/40 text-left">
                       <label className="flex items-center gap-3 cursor-pointer select-none group">
@@ -904,7 +946,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                           className="w-4 h-4 rounded text-[#D4A72C] focus:ring-[#D4A72C] border-white/30 bg-[#050609] cursor-pointer"
                         />
                         <span className="text-xs font-mono text-[#F6CC78] font-bold group-hover:text-white transition-colors">
-                          I AGREE TO PAY 150 DT TO THE CONFERENCE FEES *
+                          I AGREE TO PAY {formData.singleRoom ? '190 DT (SINGLE ROOM)' : '150 DT'} TO THE CONFERENCE FEES *
                         </span>
                       </label>
                     </div>
