@@ -136,10 +136,11 @@ function doPost(e) {
 
 function findNextAvailableRow(sheet) {
   var colB = sheet.getRange("B:B").getValues();
+  var lastRow = 1;
   for (var i = 1; i < colB.length; i++) {
-    if (!colB[i][0] || String(colB[i][0]).trim() === "") return i + 1;
+    if (colB[i][0] && String(colB[i][0]).trim() !== "") lastRow = i + 1;
   }
-  return sheet.getLastRow() + 1;
+  return lastRow + 1;
 }
 
 function countRegistrations(sheet) {
