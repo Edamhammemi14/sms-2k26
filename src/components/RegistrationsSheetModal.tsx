@@ -311,9 +311,9 @@ export const RegistrationsSheetModal: React.FC<RegistrationsSheetModalProps> = (
                           {reg.role}
                         </td>
                         <td className="py-3 px-3">
-                          {reg.singleRoom || (reg.feeAgreed && reg.feeAgreed.includes('190')) ? (
+                          {reg.singleRoom || (reg.feeAgreed && (reg.feeAgreed.includes('340') || reg.feeAgreed.includes('190') || reg.feeAgreed.toLowerCase().includes('single'))) ? (
                             <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#D4A72C]/20 border border-[#D4A72C]/50 text-[#F6CC78] whitespace-nowrap">
-                              190 DT (Single)
+                              340 DT (Single)
                             </span>
                           ) : (
                             <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-white/5 border border-white/10 text-white/70 whitespace-nowrap">

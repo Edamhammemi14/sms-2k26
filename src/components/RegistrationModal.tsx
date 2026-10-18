@@ -167,7 +167,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
         return false;
       }
       if (!formData.agreedToFee) {
-        setErrorMsg(`Please agree to pay the ${formData.singleRoom ? '190 DT (Single Room)' : '150 DT'} conference fees to proceed.`);
+        setErrorMsg(`Please agree to pay the ${formData.singleRoom ? '340 DT (150 DT Fee + 190 DT Single Room)' : '150 DT'} conference fees to proceed.`);
         return false;
       }
     }
@@ -219,7 +219,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
 
     try {
       // 1. Record registration to Google Sheet & S.H.I.E.L.D. database
-      const feeLabel = newPass.singleRoom ? '190 DT (Single Room)' : '150 DT (Standard Room)';
+      const feeLabel = newPass.singleRoom ? '340 DT (150 DT Fee + 190 DT Single Room)' : '150 DT (Standard Room)';
       const syncResult = await googleSheetService.recordRegistration({
         fullName: newPass.fullName,
         gender: newPass.gender,
@@ -435,12 +435,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                       <span className="text-[#45D483] font-bold text-xs mt-0.5 flex items-center gap-1.5 font-mono">
                         <Check className="w-3.5 h-3.5 text-[#45D483]" />
                         <span>
-                          {submittedPass.singleRoom ? '190 DT (SINGLE ROOM)' : '150 DT (STANDARD ROOM)'} — CONFIRMED & COMMITTED
+                          {submittedPass.singleRoom ? '340 DT (150 DT + 190 DT SINGLE ROOM)' : '150 DT (STANDARD ROOM)'} — CONFIRMED & COMMITTED
                         </span>
                       </span>
                     </div>
                     <span className="px-2.5 py-1 rounded-full bg-[#D4A72C]/20 border border-[#D4A72C]/50 text-[#F6CC78] text-[11px] font-mono font-bold">
-                      {submittedPass.singleRoom ? '190 DT' : '150 DT'}
+                      {submittedPass.singleRoom ? '340 DT' : '150 DT'}
                     </span>
                   </div>
                 </div>
@@ -925,11 +925,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                               DO YOU WANT A SINGLE ROOM? (OPTIONAL)
                             </span>
                             <span className="px-2.5 py-0.5 rounded bg-[#D4A72C]/20 border border-[#D4A72C]/40 text-[#F6CC78] text-[11px] font-mono font-bold shrink-0">
-                              190 DT
+                              +190 DT
                             </span>
                           </div>
                           <p className="text-[11px] text-white/60 font-grotesk mt-1 leading-relaxed">
-                            Upgrade to private single room accommodation at Hôtel Monastir Center for <strong>190 DT</strong> (Standard shared delegate pass is 150 DT).
+                            Upgrade to private single room accommodation at Hôtel Monastir Center for <strong>+190 DT</strong> (Total: <strong>340 DT</strong> = 150 DT conference fee + 190 DT single room).
                           </p>
                         </div>
                       </label>
@@ -946,7 +946,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                           className="w-4 h-4 rounded text-[#D4A72C] focus:ring-[#D4A72C] border-white/30 bg-[#050609] cursor-pointer"
                         />
                         <span className="text-xs font-mono text-[#F6CC78] font-bold group-hover:text-white transition-colors">
-                          I AGREE TO PAY {formData.singleRoom ? '190 DT (SINGLE ROOM)' : '150 DT'} TO THE CONFERENCE FEES *
+                          I AGREE TO PAY {formData.singleRoom ? '340 DT (150 DT FEE + 190 DT SINGLE ROOM)' : '150 DT'} TO THE CONFERENCE FEES *
                         </span>
                       </label>
                     </div>
