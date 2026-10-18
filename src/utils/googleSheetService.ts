@@ -83,6 +83,9 @@ const SEED_DELEGATES: DelegateRecord[] = [
   }
 ];
 
+export const DEFAULT_WEBHOOK_URL =
+  'https://script.google.com/macros/s/AKfycbzFBeYa6eaLGWYsXU2C8LJCuH5qIxOTRnedYEuMllSIlPEDYJzdVIgBJKm5fE5olsO6/exec';
+
 class GoogleSheetService {
   constructor() {
     // Setup automatic background sync retry when device reconnects to internet
@@ -90,17 +93,23 @@ class GoogleSheetService {
       window.addEventListener('online', () => {
         this.flushPendingQueue();
       });
+      // Auto-flush any queued offline registrations on app startup
+      setTimeout(() => {
+        this.flushPendingQueue();
+      }, 1500);
     }
   }
 
   /**
-   * Retrieves the user's custom Google Apps Script Web App URL from localStorage or env.
+   * Retrieves the Google Apps Script Web App URL from localStorage, env, or default webhook.
    */
   public getSheetWebhookUrl(): string {
-    if (typeof window === 'undefined') return '';
+    if (typeof window === 'undefined') return DEFAULT_WEBHOOK_URL;
     const stored = localStorage.getItem(STORAGE_KEY_SHEET_URL);
     if (stored && stored.trim().length > 0) return stored.trim();
-    return (import.meta as any).env?.VITE_GOOGLE_SHEET_URL?.trim() || '';
+    const envUrl = (import.meta as any).env?.VITE_GOOGLE_SHEET_URL?.trim();
+    if (envUrl && envUrl.length > 0) return envUrl;
+    return DEFAULT_WEBHOOK_URL;
   }
 
   /**
@@ -219,7 +228,7 @@ class GoogleSheetService {
         emergencyContact: record.emergencyContact || '',
         emergencyPhone: record.emergencyPhone || '',
         motivation: record.motivation || '',
-        feeAgreed: record.feeAgreed || '150 DT (Confirmed)',
+        feeAgreed: record.feeAgreed || (record.singleRoom ? '340 DT (150 DT Fee + 190 DT Single Room) (Confirmed)' : '150 DT (Confirmed)'),
       };
 
       // To avoid CORS preflight rejection by Google Apps Script, we send as text/plain.
