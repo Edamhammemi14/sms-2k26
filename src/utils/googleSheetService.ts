@@ -228,6 +228,7 @@ class GoogleSheetService {
         emergencyContact: record.emergencyContact || '',
         emergencyPhone: record.emergencyPhone || '',
         motivation: record.motivation || '',
+        singleRoom: !!record.singleRoom,
         feeAgreed: record.feeAgreed || (record.singleRoom ? '340 DT (150 DT Fee + 190 DT Single Room) (Confirmed)' : '150 DT (Confirmed)'),
       };
 
@@ -497,7 +498,18 @@ class GoogleSheetService {
     return `/**
  * ==============================================================================
  * AIESEC IN SFAX — SMS 2K26 (THE INFINITY SAGA)
- * OFFICIAL GOOGLE SHEETS LIVE REGISTRATION BACKEND PROXY (GOOGLE APPS SCRIPT)
+ * OFFICIAL GOOGLE SHEETS LIVE REGISTRATION BACKEND (GOOGLE APPS SCRIPT)
+ * ==============================================================================
+ * 
+ * Instructions:
+ *  1. Open your Google Sheet at https://sheets.new
+ *  2. Go to Extensions -> Apps Script
+ *  3. Delete all code, paste this entire file, and click Save (Floppy disk icon)
+ *  4. Click Deploy -> New deployment
+ *  5. Select type: "Web app"
+ *  6. Set "Execute as": "Me"
+ *  7. Set "Who has access": "Anyone"
+ *  8. Click Deploy, copy the Web App URL, and paste it into the website Organizer Portal!
  * ==============================================================================
  */
 
@@ -505,41 +517,41 @@ var CONFIG = {
   SHEET_NAME: "Registrations",
   HEADER_BG: "#0D1326",
   HEADER_TEXT: "#F6CC78",
-  LOCK_TIMEOUT_MS: 30000,
+  LOCK_TIMEOUT_MS: 30000
 };
+
+var HEADERS = [
+  "Timestamp", "Clearance ID", "Delegate Full Name", "Email Address", "WhatsApp / Mobile",
+  "Leadership Role", "University / Faculty", "Infinity Stone Resonance", "Leadership Pillar",
+  "Dietary Preference", "Allergy Safeguards", "Emergency Contact Name", "Emergency Contact Phone",
+  "Motivation Oath", "Gender", "Single Room Accommodation", "Conference Fee", "Status Check"
+];
 
 function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = getOrCreateTargetSheet(ss);
-    
+    var count = countRegistrations(sheet);
     return ContentService.createTextOutput(JSON.stringify({
       status: "active",
-      service: "SMS 2K26 Google Sheets Integration",
       spreadsheetName: ss.getName(),
-      sheetTab: sheet.getName(),
-      totalRegistrations: Math.max(0, sheet.getLastRow() - 1),
+      spreadsheetUrl: ss.getUrl(),
+      totalRegistrations: count,
       timestamp: new Date().toISOString()
     })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: err.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  
   try {
     lock.waitLock(CONFIG.LOCK_TIMEOUT_MS);
-  } catch (lockError) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      code: "LOCK_TIMEOUT",
-      message: "Server busy: concurrent write timeout. Please retry."
-    })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Busy" }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 
   try {
@@ -547,200 +559,117 @@ function doPost(e) {
       throw new Error("Missing POST payload body.");
     }
 
-    var data;
-    try {
-      data = JSON.parse(e.postData.contents);
-    } catch (parseErr) {
-      throw new Error("Invalid JSON: " + parseErr.message);
-    }
-
-    if (!data.fullName || !data.fullName.trim()) throw new Error("Delegate Full Name is required.");
-    if (!data.email || !data.email.trim()) throw new Error("Delegate Email is required.");
-    if (!data.phone || !data.phone.trim()) throw new Error("Delegate Phone is required.");
-
+    var data = JSON.parse(e.postData.contents);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = getOrCreateTargetSheet(ss);
 
-    ensureHeaders(sheet);
+    var cid = String(data.clearanceId || ("SMS-2K26-" + Utilities.getUuid().substring(0, 4).toUpperCase())).trim();
+    var time = data.timestamp || Utilities.formatDate(new Date(), "GMT+1", "yyyy-MM-dd HH:mm:ss");
+    var fullName = String(data.fullName || "Delegate").trim();
+    var email = String(data.email || "").trim();
+    var phone = "'" + String(data.phone || "").trim();
+    var emergencyPhone = data.emergencyPhone ? ("'" + String(data.emergencyPhone).trim()) : "";
 
-    var clearanceId = (data.clearanceId || "").trim();
-    var email = (data.email || "").trim().toLowerCase();
-    
+    var isSingle = data.singleRoom === true || data.singleRoom === "true" || String(data.feeAgreed || "").indexOf("340") !== -1;
+    var roomText = isSingle ? "Yes (+190 DT Single Room)" : "No (Standard Room)";
+    var feeText = String(data.feeAgreed || (isSingle ? "340 DT (Confirmed)" : "150 DT (Confirmed)")).trim();
+
     var lastRow = sheet.getLastRow();
     if (lastRow > 1) {
-      var headerVals = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       var clearanceCol = 2;
-      var emailCol = 5;
-      for (var c = 0; c < headerVals.length; c++) {
-        var hText = String(headerVals[c]).trim().toLowerCase();
-        if (hText.indexOf("clearance") !== -1) clearanceCol = c + 1;
-        if (hText.indexOf("email") !== -1) emailCol = c + 1;
-      }
-
       var existingIds = sheet.getRange(2, clearanceCol, lastRow - 1, 1).getValues();
-      var existingEmails = sheet.getRange(2, emailCol, lastRow - 1, 1).getValues();
-
       for (var i = 0; i < existingIds.length; i++) {
-        var existingId = String(existingIds[i][0]).trim();
-        var existingEmail = String(existingEmails[i][0]).trim().toLowerCase();
-
-        if (clearanceId && existingId === clearanceId) {
+        if (cid && String(existingIds[i][0]).trim() === cid) {
           return ContentService.createTextOutput(JSON.stringify({
             status: "duplicate",
-            message: "Registration already recorded with Clearance ID: " + clearanceId,
+            message: "Registration already recorded with Clearance ID: " + cid,
             row: i + 2,
-            clearanceId: clearanceId
+            clearanceId: cid
           })).setMimeType(ContentService.MimeType.JSON);
         }
       }
     }
 
-    var formattedTimestamp = data.timestamp || Utilities.formatDate(new Date(), "GMT+1", "yyyy-MM-dd HH:mm:ss");
-    var formattedPhone = "'" + String(data.phone).trim();
-    var formattedEmergencyPhone = data.emergencyPhone ? ("'" + String(data.emergencyPhone).trim()) : "";
-
     var newRow = [
-      formattedTimestamp,
-      data.clearanceId || ("SMS-2K26-" + Utilities.getUuid().substring(0, 4).toUpperCase()),
-      data.fullName.trim(),
-      data.gender || "",
-      data.email.trim(),
-      formattedPhone,
-      data.role || "Delegate / Member",
-      data.university || "",
-      data.stoneName || data.stoneId || "Mind Stone",
-      data.stoneAttribute || "",
-      data.dietary || "Standard / Halal",
-      (data.allergyDetails && data.allergyDetails.trim()) ? data.allergyDetails.trim() : "None",
-      data.emergencyContact || "",
-      formattedEmergencyPhone,
-      data.motivation || "",
-      data.feeAgreed || "150 DT (Confirmed)"
+      time,
+      cid,
+      fullName,
+      email,
+      phone,
+      String(data.role || "Delegate / Member").trim(),
+      String(data.university || "").trim(),
+      String(data.stoneName || data.stoneId || "Mind Stone").trim(),
+      String(data.stoneAttribute || "").trim(),
+      String(data.dietary || "Standard / Halal").trim(),
+      (data.allergyDetails && String(data.allergyDetails).trim()) ? String(data.allergyDetails).trim() : "None",
+      String(data.emergencyContact || "").trim(),
+      emergencyPhone,
+      String(data.motivation || "").trim(),
+      String(data.gender || "Unspecified").trim(),
+      roomText,
+      feeText,
+      "OK"
     ];
 
-    sheet.appendRow(newRow);
+    var targetRow = findNextAvailableRow(sheet);
+    sheet.getRange(targetRow, 1, 1, newRow.length).setValues([newRow]);
+    sheet.getRange(targetRow, 1, 1, newRow.length).setBackground(targetRow % 2 === 0 ? "#FAFAFC" : "#FFFFFF");
+    sheet.setRowHeight(targetRow, 26);
 
-    var targetRowIndex = sheet.getLastRow();
-    var rowRange = sheet.getRange(targetRowIndex, 1, 1, newRow.length);
-    rowRange.setBackground(targetRowIndex % 2 === 0 ? "#FAFAFC" : "#FFFFFF");
+    try {
+      if (email && email.indexOf("@") !== -1) {
+        MailApp.sendEmail({
+          to: email,
+          subject: "SMS 2K26 - Delegate Registration Confirmed (" + cid + ")",
+          body: "Hello " + fullName + ",\n\nYour registration for SMS 2K26 has been successfully confirmed!\nClearance ID: " + cid + "\n\nSee you at the conference!\nAIESEC in Sfax"
+        });
+      }
+    } catch (mailErr) {
+    }
 
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
       message: "Delegate registration successfully saved to Google Sheet.",
-      clearanceId: data.clearanceId,
-      row: targetRowIndex
+      clearanceId: cid,
+      row: targetRow
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: err.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   } finally {
     lock.releaseLock();
   }
 }
 
+function findNextAvailableRow(sheet) {
+  var colB = sheet.getRange("B:B").getValues();
+  for (var i = 1; i < colB.length; i++) {
+    if (!colB[i][0] || String(colB[i][0]).trim() === "") return i + 1;
+  }
+  return sheet.getLastRow() + 1;
+}
+
+function countRegistrations(sheet) {
+  var colB = sheet.getRange("B:B").getValues();
+  var count = 0;
+  for (var i = 1; i < colB.length; i++) {
+    if (colB[i][0] && String(colB[i][0]).trim() !== "") count++;
+  }
+  return count;
+}
+
 function getOrCreateTargetSheet(ss) {
   var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
   if (!sheet) {
-    sheet = ss.getActiveSheet();
-    if (sheet.getLastRow() === 0) {
-      sheet.setName(CONFIG.SHEET_NAME);
-    } else {
-      sheet = ss.insertSheet(CONFIG.SHEET_NAME);
+    var active = ss.getActiveSheet();
+    if (ss.getSheets().length === 1 && active.getLastRow() <= 1) {
+      active.setName(CONFIG.SHEET_NAME);
+      return active;
     }
+    sheet = ss.insertSheet(CONFIG.SHEET_NAME);
   }
   return sheet;
-}
-
-function ensureHeaders(sheet) {
-  var headers = [
-    "Timestamp",
-    "Clearance ID",
-    "Delegate Full Name",
-    "Gender",
-    "Email Address",
-    "WhatsApp / Mobile",
-    "Leadership Role",
-    "University / Faculty",
-    "Infinity Stone Resonance",
-    "Leadership Pillar",
-    "Dietary Preference",
-    "Allergy Safeguards",
-    "Emergency Contact Name",
-    "Emergency Contact Phone",
-    "Motivation Oath",
-    "Conference Fee"
-  ];
-
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(headers);
-
-    var headerRange = sheet.getRange(1, 1, 1, headers.length);
-    headerRange.setBackground(CONFIG.HEADER_BG);
-    headerRange.setFontColor(CONFIG.HEADER_TEXT);
-    headerRange.setFontWeight("bold");
-    headerRange.setFontFamily("Montserrat");
-    headerRange.setFontSize(11);
-    headerRange.setVerticalAlignment("middle");
-    sheet.setRowHeight(1, 38);
-    sheet.setFrozenRows(1);
-
-    for (var col = 1; col <= headers.length; col++) {
-      sheet.autoResizeColumn(col);
-      if (sheet.getColumnWidth(col) < 130) {
-        sheet.setColumnWidth(col, 140);
-      }
-    }
-  } else {
-    // If sheet already exists, ensure "Gender" column exists
-    var lastCol = sheet.getLastColumn();
-    var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-    var hasGender = false;
-    for (var i = 0; i < existingHeaders.length; i++) {
-      if (String(existingHeaders[i]).trim().toLowerCase() === "gender") {
-        hasGender = true;
-        break;
-      }
-    }
-    if (!hasGender) {
-      sheet.insertColumnAfter(3);
-      var genderCell = sheet.getRange(1, 4);
-      genderCell.setValue("Gender");
-      genderCell.setBackground(CONFIG.HEADER_BG);
-      genderCell.setFontColor(CONFIG.HEADER_TEXT);
-      genderCell.setFontWeight("bold");
-      genderCell.setFontFamily("Montserrat");
-      genderCell.setFontSize(11);
-      genderCell.setVerticalAlignment("middle");
-      sheet.setColumnWidth(4, 120);
-    }
-
-    // Ensure "Conference Fee" column exists
-    var lastColNow = sheet.getLastColumn();
-    var currentHeaders = sheet.getRange(1, 1, 1, lastColNow).getValues()[0];
-    var hasFee = false;
-    for (var j = 0; j < currentHeaders.length; j++) {
-      if (String(currentHeaders[j]).trim().toLowerCase().indexOf("fee") !== -1) {
-        hasFee = true;
-        break;
-      }
-    }
-    if (!hasFee) {
-      var feeCol = lastColNow + 1;
-      var feeCell = sheet.getRange(1, feeCol);
-      feeCell.setValue("Conference Fee");
-      feeCell.setBackground(CONFIG.HEADER_BG);
-      feeCell.setFontColor(CONFIG.HEADER_TEXT);
-      feeCell.setFontWeight("bold");
-      feeCell.setFontFamily("Montserrat");
-      feeCell.setFontSize(11);
-      feeCell.setVerticalAlignment("middle");
-      sheet.setColumnWidth(feeCol, 160);
-    }
-  }
 }
 `;
   }
