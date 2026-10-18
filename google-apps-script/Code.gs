@@ -1,40 +1,53 @@
 /**
  * ==============================================================================
  * AIESEC IN SFAX — SMS 2K26 (THE INFINITY SAGA)
- * OFFICIAL GOOGLE SHEETS LIVE REGISTRATION BACKEND PROXY (GOOGLE APPS SCRIPT)
+ * DYNAMIC GOOGLE SHEETS REGISTRATION BACKEND (GOOGLE APPS SCRIPT)
  * ==============================================================================
  * 
- * Features:
- *  1. Atomic write locks via LockService (prevents race conditions & row collisions).
- *  2. Duplicate prevention by Clearance ID & Email address.
- *  3. Automatic creation and Marvel/S.H.I.E.L.D. themed styling of column headers.
- *  4. Format preservation (stores phone numbers as clean text strings).
- *  5. Health check via doGet(e) for 1-click connectivity verification.
- *  6. Safe error responses with CORS-compliant JSON outputs.
- * 
- * DEPLOYMENT INSTRUCTIONS:
- *  1. Open your target Google Spreadsheet (https://sheets.google.com).
- *  2. Go to "Extensions" > "Apps Script".
- *  3. Replace any default code in Code.gs with this entire file.
- *  4. Click the blue "Deploy" button at the top-right -> "New deployment".
- *  5. Click the gear icon next to "Select type" -> select "Web app".
- *  6. Configuration:
- *       - Description: "SMS 2K26 Delegate Registration Hook"
- *       - Execute as: "Me" (your Google account)
- *       - Who has access: "Anyone" (Required so public delegates can submit without Google login)
- *  7. Click "Deploy", authorize access if prompted, and copy the "Web app URL" 
- *     (starts with https://script.google.com/macros/s/.../exec).
- *  8. Paste that URL into your site's .env file (VITE_GOOGLE_SHEET_URL=...) or inside 
- *     the Organizer Portal on the website!
+ * Key Features:
+ *  1. Dynamic Auto-Column Detection:
+ *     Any new field sent in the JSON payload (like Single Room, Shirt Size, etc.)
+ *     automatically creates a new styled column in Row 1 if missing!
+ *  2. Dedicated "Single Room Accommodation" Column:
+ *     Formats boolean true/false into "Yes (+190 DT)" or "No (Standard Room)".
+ *  3. Header-to-Value Mapping:
+ *     Data is inserted based on column header matching, ensuring no column misalignment.
+ *  4. Atomic Concurrency Lock:
+ *     Uses LockService to prevent race conditions during high-volume submissions.
+ *  5. Duplicate Prevention:
+ *     Prevents duplicate rows by checking Clearance ID and Email.
+ *  6. Format Preservation:
+ *     Prefixes phone numbers with a single quote to preserve '+' and leading zeros.
  * ==============================================================================
  */
 
-// Configuration constants
+// Visual styling configuration for Google Sheets headers
 var CONFIG = {
-  SHEET_NAME: "Registrations", // Name of the target sheet tab (auto-created if missing)
-  HEADER_BG: "#0D1326",        // S.H.I.E.L.D. Deep Cosmic Navy
-  HEADER_TEXT: "#F6CC78",      // Imperial Gold
-  LOCK_TIMEOUT_MS: 30000,      // 30 seconds atomic lock timeout
+  SHEET_NAME: "Registrations", // Name of the target sheet tab
+  HEADER_BG: "#0D1326",        // S.H.I.E.L.D. Cosmic Navy
+  HEADER_TEXT: "#F6CC78",      // Imperial Marvel Gold
+  LOCK_TIMEOUT_MS: 30000       // 30 seconds atomic lock timeout
+};
+
+// Known field key to friendly header label dictionary
+var FIELD_LABELS = {
+  timestamp: "Timestamp",
+  clearanceId: "Clearance ID",
+  fullName: "Delegate Full Name",
+  gender: "Gender",
+  email: "Email Address",
+  phone: "WhatsApp / Mobile",
+  role: "Leadership Role",
+  university: "University / Faculty",
+  stoneName: "Infinity Stone Resonance",
+  stoneAttribute: "Leadership Pillar",
+  dietary: "Dietary Preference",
+  allergyDetails: "Allergy Safeguards",
+  emergencyContact: "Emergency Contact Name",
+  emergencyPhone: "Emergency Contact Phone",
+  motivation: "Motivation Oath",
+  singleRoom: "Single Room Accommodation",
+  feeAgreed: "Conference Fee"
 };
 
 /**
@@ -47,7 +60,7 @@ function doGet(e) {
     
     return ContentService.createTextOutput(JSON.stringify({
       status: "active",
-      service: "SMS 2K26 Google Sheets Integration",
+      service: "SMS 2K26 Dynamic Google Sheets Integration",
       spreadsheetName: ss.getName(),
       sheetTab: sheet.getName(),
       totalRegistrations: Math.max(0, sheet.getLastRow() - 1),
@@ -62,12 +75,12 @@ function doGet(e) {
 }
 
 /**
- * Handle POST requests (Appends incoming validated delegate registration data)
+ * Handle POST requests (Dynamically syncs incoming delegate data to the sheet)
  */
 function doPost(e) {
   var lock = LockService.getScriptLock();
   
-  // 1. Acquire atomic script lock to safely support concurrent delegate submissions
+  // 1. Acquire atomic script lock to safely support concurrent submissions
   try {
     lock.waitLock(CONFIG.LOCK_TIMEOUT_MS);
   } catch (lockError) {
@@ -91,7 +104,6 @@ function doPost(e) {
       throw new Error("Invalid JSON payload: " + parseErr.message);
     }
 
-    // Required fields validation
     if (!data.fullName || !data.fullName.trim()) {
       throw new Error("Delegate Full Name is required.");
     }
@@ -105,32 +117,43 @@ function doPost(e) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = getOrCreateTargetSheet(ss);
 
-    // 3. Ensure header row exists
-    ensureHeaders(sheet);
+    // 3. Normalize values for formatted display
+    var normalizedData = {};
+    for (var key in data) {
+      normalizedData[key] = data[key];
+    }
 
-    // 4. Duplicate prevention check (matches Clearance ID or Email)
-    var clearanceId = (data.clearanceId || "").trim();
-    var email = (data.email || "").trim().toLowerCase();
-    
+    // Default timestamp and clearance ID if absent
+    normalizedData.timestamp = data.timestamp || Utilities.formatDate(new Date(), "GMT+1", "yyyy-MM-dd HH:mm:ss");
+    normalizedData.clearanceId = data.clearanceId || ("SMS-2K26-" + Utilities.getUuid().substring(0, 4).toUpperCase());
+
+    // Clean phone numbers
+    normalizedData.phone = "'" + String(data.phone || "").trim();
+    if (data.emergencyPhone) {
+      normalizedData.emergencyPhone = "'" + String(data.emergencyPhone).trim();
+    }
+
+    // Format Single Room Accommodation
+    if (data.singleRoom === true || data.singleRoom === "true" || String(data.singleRoom).toLowerCase().indexOf("yes") !== -1) {
+      normalizedData.singleRoom = "Yes (+190 DT Single Room)";
+    } else if (data.singleRoom === false || data.singleRoom === "false") {
+      normalizedData.singleRoom = "No (Standard Room)";
+    } else if (!data.singleRoom) {
+      normalizedData.singleRoom = (String(data.feeAgreed || "").indexOf("340") !== -1) ? "Yes (+190 DT Single Room)" : "No (Standard Room)";
+    }
+
+    // 4. Dynamic Auto-Column Sync: Ensure all keys exist as header columns
+    var headerMap = syncHeaderColumns(sheet, normalizedData);
+
+    // 5. Duplicate prevention check
+    var clearanceId = String(normalizedData.clearanceId || "").trim();
     var lastRow = sheet.getLastRow();
-    if (lastRow > 1) {
-      var headerVals = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-      var clearanceCol = 2;
-      var emailCol = 5;
-      for (var c = 0; c < headerVals.length; c++) {
-        var hText = String(headerVals[c]).trim().toLowerCase();
-        if (hText.indexOf("clearance") !== -1) clearanceCol = c + 1;
-        if (hText.indexOf("email") !== -1) emailCol = c + 1;
-      }
-
+    if (lastRow > 1 && headerMap["clearanceId"]) {
+      var clearanceCol = headerMap["clearanceId"];
       var existingIds = sheet.getRange(2, clearanceCol, lastRow - 1, 1).getValues();
-      var existingEmails = sheet.getRange(2, emailCol, lastRow - 1, 1).getValues();
 
       for (var i = 0; i < existingIds.length; i++) {
-        var existingId = String(existingIds[i][0]).trim();
-        var existingEmail = String(existingEmails[i][0]).trim().toLowerCase();
-
-        if (clearanceId && existingId === clearanceId) {
+        if (clearanceId && String(existingIds[i][0]).trim() === clearanceId) {
           return ContentService.createTextOutput(JSON.stringify({
             status: "duplicate",
             message: "Registration already recorded with Clearance ID: " + clearanceId,
@@ -141,34 +164,23 @@ function doPost(e) {
       }
     }
 
-    // 5. Construct cleanly formatted row data
-    var formattedTimestamp = data.timestamp || Utilities.formatDate(new Date(), "GMT+1", "yyyy-MM-dd HH:mm:ss");
-    var formattedPhone = "'" + String(data.phone).trim(); // Leading quote preserves + and zeros
-    var formattedEmergencyPhone = data.emergencyPhone ? ("'" + String(data.emergencyPhone).trim()) : "";
+    // 6. Build the new row matching exact header column positions
+    var totalCols = sheet.getLastColumn();
+    var newRow = new Array(totalCols);
+    for (var colIdx = 0; colIdx < totalCols; colIdx++) {
+      newRow[colIdx] = ""; // initialize empty
+    }
 
-    var newRow = [
-      formattedTimestamp,
-      data.clearanceId || ("SMS-2K26-" + Utilities.getUuid().substring(0, 4).toUpperCase()),
-      data.fullName.trim(),
-      data.gender || "",
-      data.email.trim(),
-      formattedPhone,
-      data.role || "Delegate / Member",
-      data.university || "",
-      data.stoneName || data.stoneId || "Mind Stone",
-      data.stoneAttribute || "",
-      data.dietary || "Standard / Halal",
-      (data.allergyDetails && data.allergyDetails.trim()) ? data.allergyDetails.trim() : "None",
-      data.emergencyContact || "",
-      formattedEmergencyPhone,
-      data.motivation || "",
-      data.feeAgreed || "150 DT (Confirmed)"
-    ];
+    for (var fieldKey in normalizedData) {
+      var targetCol = headerMap[fieldKey];
+      if (targetCol && targetCol <= totalCols) {
+        var val = normalizedData[fieldKey];
+        newRow[targetCol - 1] = (val !== null && val !== undefined) ? String(val) : "";
+      }
+    }
 
-    // 6. Append row
+    // 7. Append row and apply alternate zebra shading
     sheet.appendRow(newRow);
-
-    // Subtle alternate row shading for readability
     var targetRowIndex = sheet.getLastRow();
     var rowRange = sheet.getRange(targetRowIndex, 1, 1, newRow.length);
     if (targetRowIndex % 2 === 0) {
@@ -177,11 +189,10 @@ function doPost(e) {
       rowRange.setBackground("#FFFFFF");
     }
 
-    // Return success response
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
       message: "Delegate registration successfully saved to Google Sheet.",
-      clearanceId: data.clearanceId,
+      clearanceId: normalizedData.clearanceId,
       row: targetRowIndex
     })).setMimeType(ContentService.MimeType.JSON);
 
@@ -192,7 +203,6 @@ function doPost(e) {
     })).setMimeType(ContentService.MimeType.JSON);
 
   } finally {
-    // 7. Always release atomic lock
     lock.releaseLock();
   }
 }
@@ -203,7 +213,6 @@ function doPost(e) {
 function getOrCreateTargetSheet(ss) {
   var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
   if (!sheet) {
-    // If target sheet tab doesn't exist, use active sheet or create one
     sheet = ss.getActiveSheet();
     if (sheet.getLastRow() === 0) {
       sheet.setName(CONFIG.SHEET_NAME);
@@ -215,97 +224,143 @@ function getOrCreateTargetSheet(ss) {
 }
 
 /**
- * Creates and formats column headers if sheet is empty, or adds missing columns.
+ * Automatically inspects the sheet headers in Row 1.
+ * If any incoming field from normalizedData is not in Row 1, it automatically adds a new styled column!
+ * Returns a dictionary mapping fieldKey -> columnNumber (1-indexed).
  */
-function ensureHeaders(sheet) {
-  var headers = [
-    "Timestamp",
-    "Clearance ID",
-    "Delegate Full Name",
-    "Gender",
-    "Email Address",
-    "WhatsApp / Mobile",
-    "Leadership Role",
-    "University / Faculty",
-    "Infinity Stone Resonance",
-    "Leadership Pillar",
-    "Dietary Preference",
-    "Allergy Safeguards",
-    "Emergency Contact Name",
-    "Emergency Contact Phone",
-    "Motivation Oath",
-    "Conference Fee"
+function syncHeaderColumns(sheet, dataObj) {
+  var lastCol = sheet.getLastColumn();
+  var headerValues = [];
+
+  // Default baseline headers for new sheets
+  var baselineOrder = [
+    "timestamp",
+    "clearanceId",
+    "fullName",
+    "gender",
+    "email",
+    "phone",
+    "role",
+    "university",
+    "stoneName",
+    "stoneAttribute",
+    "dietary",
+    "allergyDetails",
+    "emergencyContact",
+    "emergencyPhone",
+    "motivation",
+    "singleRoom",
+    "feeAgreed"
   ];
 
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(headers);
-
-    var headerRange = sheet.getRange(1, 1, 1, headers.length);
-    headerRange.setBackground(CONFIG.HEADER_BG);
-    headerRange.setFontColor(CONFIG.HEADER_TEXT);
-    headerRange.setFontWeight("bold");
-    headerRange.setFontFamily("Montserrat");
-    headerRange.setFontSize(11);
-    headerRange.setVerticalAlignment("middle");
-    sheet.setRowHeight(1, 38);
-
-    // Freeze header row
+  if (lastCol === 0 || sheet.getLastRow() === 0) {
+    // Populate full initial headers
+    var initialHeaders = [];
+    for (var b = 0; b < baselineOrder.length; b++) {
+      var k = baselineOrder[b];
+      initialHeaders.push(FIELD_LABELS[k] || formatKeyAsLabel(k));
+    }
+    sheet.appendRow(initialHeaders);
+    formatHeaderRow(sheet, 1, initialHeaders.length);
     sheet.setFrozenRows(1);
-
-    // Auto-fit column widths
-    for (var col = 1; col <= headers.length; col++) {
-      sheet.autoResizeColumn(col);
-      // Ensure generous minimum width
-      if (sheet.getColumnWidth(col) < 130) {
-        sheet.setColumnWidth(col, 140);
-      }
-    }
+    lastCol = initialHeaders.length;
+    headerValues = initialHeaders;
   } else {
-    // If sheet already exists, ensure "Gender" column exists
-    var lastCol = sheet.getLastColumn();
-    var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-    var hasGender = false;
-    for (var i = 0; i < existingHeaders.length; i++) {
-      if (String(existingHeaders[i]).trim().toLowerCase() === "gender") {
-        hasGender = true;
+    headerValues = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  }
+
+  // Create dictionary of lowercase cleaned header text -> column index (1-indexed)
+  var headerNameToCol = {};
+  for (var c = 0; c < headerValues.length; c++) {
+    var rawText = String(headerValues[c]).trim().toLowerCase();
+    headerNameToCol[rawText] = c + 1;
+  }
+
+  var keyToCol = {};
+
+  // Map known fields first
+  for (var key in dataObj) {
+    if (key === "stoneId") continue; // redundant with stoneName
+
+    var desiredLabel = FIELD_LABELS[key] || formatKeyAsLabel(key);
+    var searchKey = desiredLabel.toLowerCase();
+    var altKey = key.toLowerCase();
+
+    var foundCol = null;
+
+    // Search by exact label or key
+    for (var existingText in headerNameToCol) {
+      if (existingText === searchKey || existingText === altKey) {
+        foundCol = headerNameToCol[existingText];
         break;
       }
-    }
-    // If missing, automatically insert Gender column after Column 3 (Delegate Full Name)
-    if (!hasGender) {
-      sheet.insertColumnAfter(3);
-      var genderCell = sheet.getRange(1, 4);
-      genderCell.setValue("Gender");
-      genderCell.setBackground(CONFIG.HEADER_BG);
-      genderCell.setFontColor(CONFIG.HEADER_TEXT);
-      genderCell.setFontWeight("bold");
-      genderCell.setFontFamily("Montserrat");
-      genderCell.setFontSize(11);
-      genderCell.setVerticalAlignment("middle");
-      sheet.setColumnWidth(4, 120);
     }
 
-    // Ensure "Conference Fee" column exists
-    var lastColNow = sheet.getLastColumn();
-    var currentHeaders = sheet.getRange(1, 1, 1, lastColNow).getValues()[0];
-    var hasFee = false;
-    for (var j = 0; j < currentHeaders.length; j++) {
-      if (String(currentHeaders[j]).trim().toLowerCase().indexOf("fee") !== -1) {
-        hasFee = true;
-        break;
+    // Fuzzy matching for known core fields
+    if (!foundCol) {
+      if (key === "fullName" && headerNameToCol["name"]) foundCol = headerNameToCol["name"];
+      if (key === "singleRoom" && (headerNameToCol["single room"] || headerNameToCol["room"])) {
+        foundCol = headerNameToCol["single room"] || headerNameToCol["room"];
       }
+      if (key === "feeAgreed" && headerNameToCol["fee"]) foundCol = headerNameToCol["fee"];
     }
-    if (!hasFee) {
-      var feeCol = lastColNow + 1;
-      var feeCell = sheet.getRange(1, feeCol);
-      feeCell.setValue("Conference Fee");
-      feeCell.setBackground(CONFIG.HEADER_BG);
-      feeCell.setFontColor(CONFIG.HEADER_TEXT);
-      feeCell.setFontWeight("bold");
-      feeCell.setFontFamily("Montserrat");
-      feeCell.setFontSize(11);
-      feeCell.setVerticalAlignment("middle");
-      sheet.setColumnWidth(feeCol, 160);
+
+    // IF COLUMN DOES NOT EXIST: AUTOMATICALLY ADD NEW COLUMN TO SHEET!
+    if (!foundCol) {
+      lastCol = sheet.getLastColumn() + 1;
+      var newCell = sheet.getRange(1, lastCol);
+      newCell.setValue(desiredLabel);
+      styleHeaderCell(newCell);
+      sheet.setColumnWidth(lastCol, Math.max(140, desiredLabel.length * 9));
+      
+      headerNameToCol[searchKey] = lastCol;
+      foundCol = lastCol;
+    }
+
+    keyToCol[key] = foundCol;
+  }
+
+  return keyToCol;
+}
+
+/**
+ * Turns camelCase or snake_case key into Title Case label (e.g. shirtSize -> Shirt Size)
+ */
+function formatKeyAsLabel(key) {
+  var result = key.replace(/([A-Z])/g, " $1");
+  result = result.replace(/_/g, " ");
+  return result.charAt(0).toUpperCase() + result.slice(1);
+}
+
+/**
+ * Applies S.H.I.E.L.D. Marvel styling to the entire header row
+ */
+function formatHeaderRow(sheet, startCol, numCols) {
+  var headerRange = sheet.getRange(1, startCol, 1, numCols);
+  headerRange.setBackground(CONFIG.HEADER_BG);
+  headerRange.setFontColor(CONFIG.HEADER_TEXT);
+  headerRange.setFontWeight("bold");
+  headerRange.setFontFamily("Montserrat");
+  headerRange.setFontSize(11);
+  headerRange.setVerticalAlignment("middle");
+  sheet.setRowHeight(1, 38);
+
+  for (var col = startCol; col < startCol + numCols; col++) {
+    sheet.autoResizeColumn(col);
+    if (sheet.getColumnWidth(col) < 130) {
+      sheet.setColumnWidth(col, 140);
     }
   }
+}
+
+/**
+ * Styles a single newly added header cell
+ */
+function styleHeaderCell(cell) {
+  cell.setBackground(CONFIG.HEADER_BG);
+  cell.setFontColor(CONFIG.HEADER_TEXT);
+  cell.setFontWeight("bold");
+  cell.setFontFamily("Montserrat");
+  cell.setFontSize(11);
+  cell.setVerticalAlignment("middle");
 }

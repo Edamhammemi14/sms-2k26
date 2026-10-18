@@ -456,6 +456,7 @@ class GoogleSheetService {
       'Emergency Contact Name',
       'Emergency Contact Phone',
       'Motivation Oath',
+      'Single Room Accommodation',
       'Conference Fee',
     ];
 
@@ -475,6 +476,7 @@ class GoogleSheetService {
       r.emergencyContact || '',
       r.emergencyPhone || '',
       (r.motivation || '').replace(/\r?\n|\r/g, ' '),
+      r.singleRoom ? 'Yes (+190 DT Single Room)' : 'No (Standard Room)',
       r.feeAgreed || '150 DT (Confirmed)',
     ]);
 
